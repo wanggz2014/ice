@@ -31,7 +31,7 @@ const pageExists = (pages, name = '') => {
   });
 };
 
-@inject('projects', 'newpage', 'blocks', 'customBlocks', 'progress')
+@inject('projects', 'newpage', 'blocks', 'customBlocks', 'progress', 'intro')
 @observer
 class PageConfig extends Component {
   /* eslint-disable react/require-default-props */
@@ -170,6 +170,7 @@ class PageConfig extends Component {
                 body: content.join(' '),
               });
               this.props.newpage.emit('generate-page-success');
+              this.props.intro.startHintNewPageItemShowed();
 
               log.info('generate-page-success', 'page 创建成功');
 

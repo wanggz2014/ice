@@ -1,5 +1,5 @@
 import { Dialog } from '@icedesign/base';
-import { observer } from 'mobx-react';
+import { observer, inject } from 'mobx-react';
 import React, { Component } from 'react';
 
 import projectScripts from '../../../lib/project-scripts';
@@ -10,16 +10,19 @@ const { interaction } = services;
 /**
  * 用于在新项目创建完成后，操作初始化依赖的功能
  */
+@inject('intro')
 @observer
 class ProjectInit extends Component {
   handleCancel = () => {
     this.props.project.setNeedInstallDeps(false);
+    this.props.intro.start();
   };
   handleOk = () => {
-    const { project } = this.props;
+    const { project, intro } = this.props;
     const nodeFramework = project.nodeFramework;
     project.setNeedInstallDeps(false);
     project.toggleTerminal();
+    intro.installProject = true;
 
     project.installStart();
     projectScripts.install(

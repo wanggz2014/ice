@@ -14,6 +14,7 @@ class ExtraButton extends Component {
       style = {},
       placement = 'bottomRight',
       active,
+      className,
       ...other
     } = this.props;
     const btn = (
@@ -22,6 +23,7 @@ class ExtraButton extends Component {
         className={classnames({
           'extra-button': true,
           active: active,
+          [className]: className
         })}
         onClick={disabled ? () => {} : onClick}
         style={disabled ? styles.disabled : style}

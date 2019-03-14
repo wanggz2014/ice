@@ -6,6 +6,7 @@ import { shell } from 'electron';
 const DevServerUrl = (props) => {
   const classes = cx({
     'project-server-url': true,
+    'hint4': true
   });
   if (!props.url) {
     return null;

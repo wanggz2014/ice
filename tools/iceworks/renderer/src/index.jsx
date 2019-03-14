@@ -6,6 +6,7 @@ import ReactDOM from 'react-dom';
 // 载入默认全局样式
 import '@icedesign/base/reset.scss';
 import 'rc-tooltip/assets/bootstrap.css';
+import 'intro.js/introjs.css'
 
 import App from './App';
 import Error from './pages/Error';

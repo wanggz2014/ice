@@ -1,5 +1,6 @@
 // import { Icon } from '@icedesign/base';
 import React, { Component } from 'react';
+import classnames from 'classnames';
 import Icon from '../../../../components/Icon';
 
 import './index.scss';
@@ -34,8 +35,9 @@ class ActionButton extends Component {
     let disabledStyle = this.props.disabled ? styles.actionIconDisabled : {};
     const disabledLabel = this.props.disabledLabel || '';
     const label = this.props.disabled ? disabledLabel : this.props.label;
+    const cn = classnames('action-button-item', {[this.props.className]: this.props.className});
     return (
-      <div className="action-button-item" onClick={this.handleClick}>
+      <div className={cn} onClick={this.handleClick}>
         <Icon
           style={{
             ...styles.actionIcon,

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import classnames from 'classnames';
 
 import './index.scss';
 
@@ -14,8 +15,12 @@ class DashboardCard extends Component {
 
 class Header extends Component {
   render() {
+    const cn = classnames({
+      'dashboard-card-header': true,
+      [this.props.className]: this.props.className
+    })
     return (
-      <div className="dashboard-card-header" {...this.props}>
+      <div  {...this.props} className={cn}>
         {this.props.children}
       </div>
     );

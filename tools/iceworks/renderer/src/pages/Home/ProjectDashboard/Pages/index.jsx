@@ -184,7 +184,7 @@ class PagesCard extends Component {
     const { pages } = this.state;
     return (
       <DashboardCard>
-        <DashboardCard.Header>
+        <DashboardCard.Header className="hint5">
           <div>
             页面列表
             <span style={{ paddingLeft: 10, fontSize: 12, color: '#666' }}>

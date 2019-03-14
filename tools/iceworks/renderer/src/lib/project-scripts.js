@@ -158,8 +158,9 @@ export default {
   /**
    * 启动项目服务，并改变项目的状态
    * @param {Object} project 项目 stores 实例
+   * @param {Object} intro 指引 stores 实例
    */
-  start(project) {
+  start(project, intro) {
     const libraryType = project.getLibraryType();
     if (sessions.startProxy.has(project.fullPath)) {
       project.devStart();
@@ -236,7 +237,11 @@ export default {
             },
             (code) => {
               project.devStop();
+
               if (code !== 0) {
+                if (intro) {
+                  intro.startHintAfterDebugFailed();
+                }
                 if (!project.terminalVisible) {
                   project.toggleTerminal();
                   terms.writeln(project.fullPath, '');

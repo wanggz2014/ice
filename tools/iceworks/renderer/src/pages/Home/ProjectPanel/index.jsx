@@ -3,6 +3,7 @@ import { inject, observer } from 'mobx-react';
 import { ipcRenderer } from 'electron';
 import loadable from 'react-loadable';
 import React, { Component } from 'react';
+import { Steps, Hints } from 'intro.js-react';
 
 import { openInBrowser } from '../../../external';
 import ActionButton from './ActionButton';
@@ -43,7 +44,7 @@ const { editors, shells, folder, interaction, createTouchBar } = services;
 
 import './index.scss';
 
-@inject('projects', 'newpage', 'switcher', 'installer')
+@inject('projects', 'newpage', 'switcher', 'installer', 'intro')
 @observer
 class Project extends Component {
   constructor(props) {
@@ -53,6 +54,13 @@ class Project extends Component {
   componentDidMount() {
     this.setTitle();
     this.setTouchBar();
+  }
+
+  componentWillUpdate() {
+    const { currentProject } = this.props.projects;
+    if(currentProject && currentProject.serverUrl) {
+      this.props.intro.startHintAfterDebugSuc();
+    }
   }
 
   componentDidUpdate() {
@@ -104,8 +112,8 @@ class Project extends Component {
   };
 
   handleStartProject = () => {
-    const { projects } = this.props;
-    projectScripts.start(projects.currentProject);
+    const { projects, intro } = this.props;
+    projectScripts.start(projects.currentProject, intro);
   };
 
   handleStopProject = () => {
@@ -212,6 +220,7 @@ class Project extends Component {
 
   closeLogs = () => {
     this.handleToggleTerminal();
+    this.props.intro.startAfterCloseLogs();
   }
 
   render() {
@@ -226,7 +235,7 @@ class Project extends Component {
     return (
       <div className="project-panel">
         <button
-          className="project-title-wrapper"
+          className="project-title-wrapper intro1"
           onClick={this.handleToggleProjectSwitch}
         >
           <h1 className="title" title={currentProject.projectName}>
@@ -237,7 +246,7 @@ class Project extends Component {
           </span>
         </button>
         <div className="project-header">
-          <div className="scripts">
+          <div className="scripts intro2">
             {currentProject.isWorking ? (
               <ActionButton
                 disabled={currentProject.isUnavailable}
@@ -252,6 +261,7 @@ class Project extends Component {
                 onClick={this.handleStartProject}
                 label="启动调试服务"
                 disabledLabel="未适配"
+                className="hint1"
               />
             )}
             <ActionButton
@@ -260,7 +270,8 @@ class Project extends Component {
               onClick={this.handleCreatePage}
               label="新建页面"
               disabledLabel="未适配"
-            />
+              className="hint2"
+              />
             <ActionButton
               disabled={currentProject.isUnavailable}
               name="build"
@@ -269,11 +280,12 @@ class Project extends Component {
               disabledLabel="未适配"
             />
           </div>
-          <div className="external">
+          <div className="external intro5">
             <ExtraButton
               placement={'bottom'}
               tipText={'在编辑器中打开'}
               onClick={this.handleOpenEditor}
+              className="hint6"
             >
               <Icon size="small" type="code" /> 编辑器
             </ExtraButton>
@@ -313,7 +325,7 @@ class Project extends Component {
               </span>
             )}
           </div>
-          <div className="extra-action">
+          <div className="extra-action intro3">
             {currentProject.isUnavailable && (
               <ExtraButton
                 placement={'bottom'}
@@ -348,6 +360,7 @@ class Project extends Component {
               disabled={currentProject.actionDisabled}
               tipText={'初始化项目依赖，或重新安装所有依赖'}
               onClick={this.handleInstallProject}
+              className="hint3"
             >
               <Icon size="small" type="package_org" /> 重装依赖
             </ExtraButton>
@@ -360,7 +373,7 @@ class Project extends Component {
             </ExtraButton>
           </div>
         </div>
-        <ProjectDashboard className="project-dashboard" />
+        <ProjectDashboard className="project-dashboard intro4" />
         {currentProject.exists && currentProject.terminalVisible && (
           <ProjectTerminal
             project={currentProject}
@@ -370,6 +383,17 @@ class Project extends Component {
         )}
         <AddPackage />
         <ProjectInit project={currentProject} />
+        <Steps
+          enabled={this.props.intro.stepsEnabled}
+          steps={this.props.intro.steps}
+          initialStep={0}
+          onExit={this.props.intro.onExit}
+        />
+        <Hints
+          enabled={this.props.intro.hintsEnabled}
+          hints={this.props.intro.currentHints}
+          onClose={this.props.intro.onhintclose}
+        />
       </div>
     );
   }

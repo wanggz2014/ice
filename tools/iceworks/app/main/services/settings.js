@@ -14,6 +14,13 @@ const defaultSettings = {
   materials: defaultMaterials,
   // 是否使用备用物料源
   isMaterialsBackup: false,
+
+  stepShowed: false,
+  hintStartDebugShowed: false,
+  hintStartDebugSucShowed: false,
+  hintStartDebugFailedShowed: false,
+  // hintNewPageShowed: false,
+  hintNewPageItemShowed: false,
 };
 
 module.exports = {
@@ -24,26 +31,26 @@ module.exports = {
     logger.debug(appSettings.file());
     Object.entries(defaultSettings).forEach((option) => {
       const [key, value] = option;
-      if (!this.has(key)) {
+      // if (!this.has(key)) {
         this.set(key, value);
-      } else if (key === 'materials') {
-        // 重置用户本地的物料源配置，初始化物料源新增字段添加，保留用户设置
-        const oldMaterials = this.get('materials');
-        const defaultMaterialsObj = {};
-        defaultMaterials.forEach( obj => {
-          if (obj.backupSource) {
-            defaultMaterialsObj[obj.source] = obj;
-          }
-        });
-        const newMaterials = oldMaterials.map((material) => {
-          const defaultMaterial = defaultMaterialsObj[material.source];
-          if (defaultMaterial) {
-            return Object.assign({}, defaultMaterial, material);
-          }
-          return material;
-        });
-        this.set(key, newMaterials);
-      }
+      // } else if (key === 'materials') {
+      //   // 重置用户本地的物料源配置，初始化物料源新增字段添加，保留用户设置
+      //   const oldMaterials = this.get('materials');
+      //   const defaultMaterialsObj = {};
+      //   defaultMaterials.forEach( obj => {
+      //     if (obj.backupSource) {
+      //       defaultMaterialsObj[obj.source] = obj;
+      //     }
+      //   });
+      //   const newMaterials = oldMaterials.map((material) => {
+      //     const defaultMaterial = defaultMaterialsObj[material.source];
+      //     if (defaultMaterial) {
+      //       return Object.assign({}, defaultMaterial, material);
+      //     }
+      //     return material;
+      //   });
+      //   this.set(key, newMaterials);
+      // }
     });
   },
   clear() {

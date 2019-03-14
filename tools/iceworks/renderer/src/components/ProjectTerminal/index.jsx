@@ -105,13 +105,6 @@ class ProjectTerminal extends Component {
               >
                 返回工作台
               </Button>
-              // <ExtraButton
-              //   onClick={closeLogs}
-              //   tipText={'关闭日志面板'}
-              //   style={{ color: '#eee' }}
-              // >
-              //   <Icon type="close" />
-              // </ExtraButton>
             )
           }
         </div>

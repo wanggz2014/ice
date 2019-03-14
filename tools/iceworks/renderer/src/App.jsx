@@ -21,6 +21,7 @@ import user from './stores/user';
 import progress from './stores/progress';
 import blockGroups from './stores/block-groups';
 import git from './stores/git';
+import intro from './stores/intro';
 
 import services from './services';
 const { settings } = services;
@@ -115,6 +116,7 @@ class App extends Component {
         progress={progress}
         blockGroups={blockGroups}
         git={git}
+        intro={intro}
       >
         <Layout>
           <VisibleWrapper
