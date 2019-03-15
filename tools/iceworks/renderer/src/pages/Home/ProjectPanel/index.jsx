@@ -388,6 +388,8 @@ class Project extends Component {
           steps={this.props.intro.steps}
           initialStep={0}
           onExit={this.props.intro.onExit}
+          onBeforeExit={this.props.intro.onBeforeExit}
+          onComplete={this.props.intro.onComplete}
         />
         <Hints
           enabled={this.props.intro.hintsEnabled}

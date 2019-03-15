@@ -3,58 +3,44 @@ import { observable, action, computed } from 'mobx';
 import services from '../services';
 const { settings } = services;
 
+// 文档
+// https://www.npmjs.com/package/intro.js-react
+// https://introjs.com/
+
 class Intro {
   @observable
-  introState = null;
+  stepsEnabled = false;
+  // stepsEnabled = true;
+  @observable
+  hintsEnabled = true;
+
   @observable
   installProject = false; // 初始化项目时，是否选择了安装依赖
   @observable
-  stepsEnabled = false;
-  // @observable
-  // hintStartDebug = false;
-  // @observable
-  // hintStartDebugSuc = false;
-  // @observable
-  // hintStartDebugFailed = false;
-  @observable
-  hintNewPage = false;
-  @observable
-  hintsEnabled = true;
-  @observable
-  currentHints = [
-    {
-      element: '.hint5',
-      hint: '新建页面展示在这里，可以添加区块到当前页面或者删除页面',
-      hintPosition: 'middle-middle',
-      key: 'hintNewPageItemShowed'
-    }
-  ];
+  currentHints = [];
 
   steps = [
     {
       element: '.intro1',
-      intro: 'test 1',
+      intro: '1. 在这里进行项目的管理哦，可以创建、删除项目，同时查看已有项目是否在调试中（绿点标识）。',
       position: 'bottom',
-      tooltipClass: 'myTooltipClass',
-      highlightClass: 'myHighlightClass',
     },
     {
       element: '.intro2',
-      intro: 'test 2',
+      intro: '2. 最常用的功能区，项目开发的第一步推荐你启动调试服务。',
     },
     {
       element: '.intro3',
-      intro: 'test 3',
+      intro: '3. 在这里查看运行日志，安装单个依赖，或者重装依赖。',
     },
     {
       element: '.intro4',
-      intro: 'test 4',
+      intro: '4. 工作台区域，提供了更详细的项目信息，以及各类插件能力。',
       position: 'top',
-      tooltipClass: 'myTooltipClass',
     },
     {
       element: '.intro5',
-      intro: 'test 5',
+      intro: '5. 最后，从这里直接唤起你的 IDE 开始 coding 吧',
     }
   ];
 
@@ -109,12 +95,29 @@ class Intro {
 
   @action
   onExit = () =>  {
+    console.log('step exit')
+    this.done = true; // skip 情况下
     this.stepsEnabled = false;
     settings.set('stepShowed', true);
     // step 执行完 启动 hints 提示
     if (!settings.get('hintStartDebugShowed')) {
       this.currentHints = this.hints1;
     }
+  }
+
+  @action
+  onBeforeExit = () => {
+    console.log('onBeforeExit')
+    if (this.done) {
+      return true;
+    }
+    return false
+  }
+
+  @action
+  onComplete = () => {
+    console.log('onComplete');
+    this.done = true;
   }
 
   @action 
