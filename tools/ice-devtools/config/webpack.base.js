@@ -9,12 +9,14 @@ const SASS_LOADER = require.resolve('sass-loader');
 const LESS_LOADER = require.resolve('less-loader');
 const HANDLEBARS_LOADER = require.resolve('handlebars-loader');
 const ICE_SKIN_LOADER = require.resolve('ice-skin-loader');
+const AWESOME_TYPESCRIPT_LOADER = require.resolve('awesome-typescript-loader');
 const WEBPACK_HOT_CLIENT = require.resolve('webpack-hot-client/client');
 const SimpleProgressPlugin = require('webpack-simple-progress-plugin');
 const WebpackPluginImport = require('webpack-plugin-import');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const OptimizeCSSAssetsPlugin = require.resolve("optimize-css-assets-webpack-plugin");
+
+const OptimizeCSSAssetsPlugin = require.resolve('optimize-css-assets-webpack-plugin');
 const UglifyJsPlugin = require.resolve('uglifyjs-webpack-plugin');
 
 const getBabelConfig = require('./getBabelConfig');
@@ -24,6 +26,9 @@ const internalLibrary = require('../utils/internal-library');
 const URL_LOADER = require.resolve('url-loader');
 const URL_LOADER_LIMIT = 8192;
 
+// refs: https://github.com/webpack-contrib/mini-css-extract-plugin
+const MiniCssExtractPluginLoader = MiniCssExtractPlugin.loader;
+
 module.exports = function getWebpackBaseConfig(cwd, entries = {}) {
   const config = new WebpackConfig();
 
@@ -32,20 +37,44 @@ module.exports = function getWebpackBaseConfig(cwd, entries = {}) {
 
   const pkgJSON = getPkgJSON(cwd);
   const { buildConfig = {}, themeConfig = {} } = pkgJSON;
+  const babelConfig = getBabelConfig(buildConfig);
 
   config.module
     .rule('babel')
     .test(/\.jsx?$/)
+    .exclude
+    .add(/node_modules/)
+    .end()
     .use('babel')
     .loader(BABEL_LOADER)
-    .options(getBabelConfig(buildConfig))
+    .options(babelConfig)
+    .end();
+
+  config.module
+    .rule('typescript')
+    .test(/\.tsx?$/)
+    .exclude
+    .add(/node_modules/)
+    .end()
+    .use('babel')
+    .loader(BABEL_LOADER)
+    .options(babelConfig)
+    .end()
+    .use('typescript')
+    .loader(AWESOME_TYPESCRIPT_LOADER)
+    .options({
+      useCache: false,
+    })
     .end();
 
   config.module
     .rule('css')
     .test(/\.css$/)
+    .exclude
+    .add(/\.module\.css$/)
+    .end()
     .use('style')
-    .loader(MiniCssExtractPlugin.loader)
+    .loader(MiniCssExtractPluginLoader)
     .end()
     .use('css')
     .loader(CSS_LOADER)
@@ -67,7 +96,7 @@ module.exports = function getWebpackBaseConfig(cwd, entries = {}) {
     .exclude.add(/\.module\.scss$/)
     .end()
     .use('style-loader')
-    .loader(MiniCssExtractPlugin.loader)
+    .loader(MiniCssExtractPluginLoader)
     .end()
     .use('css-loader')
     .loader(CSS_LOADER)
@@ -83,13 +112,13 @@ module.exports = function getWebpackBaseConfig(cwd, entries = {}) {
     })
     .end();
 
-    config.module
+  config.module
     .rule('less')
     .test(/\.less$/)
     .exclude.add(/\.module\.less$/)
     .end()
     .use('style-loader')
-    .loader(MiniCssExtractPlugin.loader)
+    .loader(MiniCssExtractPluginLoader)
     .end()
     .use('css-loader')
     .loader(CSS_LOADER)
@@ -97,16 +126,31 @@ module.exports = function getWebpackBaseConfig(cwd, entries = {}) {
     .use('less-loader')
     .loader(LESS_LOADER)
     .options({
-      javascriptEnabled: true
+      javascriptEnabled: true,
     })
     .end();
 
   config.module
     .rule('cssmodule')
+    .test(/\.module\.css$/)
     .use('style-loader')
-    .loader(MiniCssExtractPlugin.loader)
+    .loader(MiniCssExtractPluginLoader)
     .end()
+    .use('css-loader')
+    .loader(CSS_LOADER)
+    .options({
+      sourceMap: true,
+      modules: true,
+      localIdentName: '[folder]--[local]--[hash:base64:7]',
+    })
+    .end();
+
+  config.module
+    .rule('scss-cssmodule')
     .test(/\.module\.scss$/)
+    .use('style-loader')
+    .loader(MiniCssExtractPluginLoader)
+    .end()
     .use('css-loader')
     .loader(CSS_LOADER)
     .options({
@@ -124,6 +168,24 @@ module.exports = function getWebpackBaseConfig(cwd, entries = {}) {
       themeFile: theme && path.join(appNodeModules, `${theme}/variables.scss`),
       themeConfig,
     })
+    .end();
+
+  config.module
+    .rule('less-cssmodule')
+    .test(/\.module\.less$/)
+    .use('style-loader')
+    .loader(MiniCssExtractPluginLoader)
+    .end()
+    .use('css-loader')
+    .loader(CSS_LOADER)
+    .options({
+      sourceMap: true,
+      modules: true,
+      localIdentName: '[folder]--[local]--[hash:base64:7]',
+    })
+    .end()
+    .use('less-loader')
+    .loader(LESS_LOADER)
     .end();
 
   config.module
@@ -197,7 +259,9 @@ module.exports = function getWebpackBaseConfig(cwd, entries = {}) {
   config.resolve.extensions
     .add('.js')
     .add('.jsx')
-    .add('.json');
+    .add('.json')
+    .add('.ts')
+    .add('.tsx');
 
   config.plugin('progress').use(SimpleProgressPlugin);
 
@@ -209,9 +273,9 @@ module.exports = function getWebpackBaseConfig(cwd, entries = {}) {
 
   config.plugin('css').use(MiniCssExtractPlugin, [
     {
-      filename: "[name].css",
-      chunkFilename: "[id].css"
-    }
+      filename: '[name].css',
+      chunkFilename: '[id].css',
+    },
   ]);
 
   config.plugin('import').use(WebpackPluginImport, [
@@ -261,7 +325,7 @@ module.exports = function getWebpackBaseConfig(cwd, entries = {}) {
     .end()
     .minimizer('css')
     .use(OptimizeCSSAssetsPlugin, [{
-      cssProcessorOptions: { safe: true }
+      cssProcessorOptions: { safe: true },
     }]);
 
   return config;

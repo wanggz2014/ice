@@ -1,3 +1,5 @@
+/* Deprecated */
+/* eslint-disable */
 const fs = require('fs');
 const path = require('path');
 const hbs = require('handlebars');
@@ -28,7 +30,7 @@ module.exports = function router(app, cwd) {
       res.redirect('/');
       return;
     }
-  
+
     const demoFile = path.join(cwd, 'demo', demo + '.md');
     if (!fs.existsSync(demoFile)) {
       res.redirect('/');
@@ -36,11 +38,13 @@ module.exports = function router(app, cwd) {
     }
 
     const demoContent = fs.readFileSync(demoFile, 'utf-8');
-    const { highlightedCode, content, meta } = parseMarkdownParts(demoContent);
+    const { highlightedCode, content, meta } = parseMarkdownParts(demoContent, {
+      sliceCode: true
+    });
 
     const compileTemplateContent = compile(DEMO_TEMPLATE);
 
-    const jsTemplateContent = compileTemplateContent({ 
+    const jsTemplateContent = compileTemplateContent({
       demoName: demo,
       name: pkgName, // 组件 npm名
       meta: Object.keys(meta).map((key) => ({ key, value: meta[key] })),
@@ -55,7 +59,7 @@ module.exports = function router(app, cwd) {
   app.get('/', async (req, res, next) => {
     const compileTemplateContent = compile(HOME_TEMPLATE);
 
-    const jsTemplateContent = compileTemplateContent({ 
+    const jsTemplateContent = compileTemplateContent({
       demos,
       pkg: pkgName
      });

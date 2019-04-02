@@ -1,27 +1,49 @@
 ---
 title: ice-scripts 使用指南
 order: 1
-category: 进阶指南
 ---
 
-飞冰项目默认使用 [ice-scripts](https://github.com/alibaba/ice/tree/master/tools/ice-scripts) 作为开发工具，ice-scripts 提供了丰富的功能帮助我们提高开发效率：
+[ice-scripts](https://github.com/alibaba/ice/tree/master/tools/ice-scripts) 是飞冰（ICE）React 链路的开发者工具，类似 vue-cli 与 vue 的关系。ice-scripts 提供了丰富的功能帮助我们开发 React 项目：
 
-- 命令行工具
-- 主题配置
-- 代理配置
-- 自定义 webpack 配置
-- Mock
+- 完善的命令行工具
+- 支持项目/业务组件/区块的开发&构建
+- 基于 Fusion 体系的主题配置
+- 完善的自定义 webpack 配置
 - ……
 
-本文会讲述 ice-scripts 完整的使用指南。PS: 请保证 ice-scripts 版本为 1.1.0 及以上。
+本文会讲述 ice-scripts 完整的使用指南。
+
+## 安装
+
+```bash
+$ npm i -g ice-scripts
+$ ice --help
+```
+
+当然你也可以将其作为项目级依赖：`npm i --save-dev ice-scripts`
 
 ## 命令行工具
 
-ice-scripts 提供了 `dev/build` 的开发命令，如果使用 Iceworks 开发，那么大多数时候你不需要关心这些命令。
+ice-scripts 提供了 `init/dev/build` 的开发命令，如果使用 Iceworks 开发，那么大多数时候你不需要关心这些命令。
+
+### ice init
+
+根据模板初始化项目：
+
+```bash
+$ ice init --help
+
+Usage: ice-init [options]
+
+Options:
+
+  -s, --scaffold <port>  模板 npm 包名
+  -h, --help             output usage information
+```
 
 ### ice dev
 
-启动调试服务
+启动调试服务：
 
 ```bash
 $ ice dev --help
@@ -55,7 +77,7 @@ $ ice dev --https
 
 ### ice build
 
-构建代码
+构建项目代码
 
 ```plain
 $ ice build --help
@@ -65,8 +87,12 @@ Usage: ice-build [options]
 Options:
   --debug                debug 模式下不压缩
   --hash                 构建后的资源带 hash 版本
-  --project-type <type>  项目类型, node|web (default: "web")
-  --inject-babel <type>  注入 babel 运行环境, Enum: polyfill|runtime (default: "polyfill")
+  --sourcemap <type>     构建后的资源带 sourcemap 文件
+  --project-type <type>  项目类型, node|nodejs|web
+  -s, --skip-install     跳过安装依赖
+  --skip-demo            跳过构建 build/index.html 的环节
+  --inject-babel <type>  注入 babel 运行环境, Enum: polyfill|runtime
+  -h, --help             output usage information
 ```
 
 ## 构建配置 - buildConfig
@@ -96,7 +122,7 @@ Options:
 }
 ```
 
-然后在 public 目录新增对应的 `dashboard.html` 和 `about.html` 文件，新增的 HTML 内容请参考默认的 `public/index.html`。
+然后在 public 目录新增对应的 `dashboard.html` 和 `about.html` 文件，新增的 HTML 内容请参考默认的 `public/index.html`。多 entry 的情况构建时会额外生成 vendor.js/css，需要自行在 html 里引入（public 目录会自动引入），也可以通过下面的 `buildConfig.disableVendor` 禁止生成 vendor 文件。
 
 ### babelPluginImportConfig
 
@@ -142,6 +168,62 @@ babel-loader 有一个 exclude 的配置，用于过滤某些目录下的文件�
 
 这样不同名的基础包都会重定向到 `@icedesign/base`，减少 bundle 的大小。
 
+### 修改构建后的文件目录
+
+```js
+"buildConfig": {
+  "output": {
+    "path": "dist"
+  }
+}
+```
+
+### 修改构建后的 css/js 文件目录
+
+默认情况下 css 在 `build/css/` 下，js 在 `build/js/` 下，可以通过 `outputAssetsPath` 配置修改：
+
+```js
+"buildConfig": {
+  "outputAssetsPath": {
+    // 示例1：修改为 build/css-dist/ build/js-dist/
+    "css": "css-dist",
+    "js": "js-dist",
+    // 示例2：js 和 css 都直接放在 build/ 下
+    "css": "",
+    "js": ""
+  }
+}
+```
+
+### 修改 externals
+
+```js
+"buildConfig": {
+  "externals": {
+    "jquery": "window.$"
+  }
+}
+```
+
+另外，ice-scripts 会根据 `public/*.html` 里是否通过 script 标签引入了 React 来推导是否需要生成 React 相关的 externals，这个 externals 会跟用户配置直接 merge：
+
+```json
+{
+  "react": "window.React",
+  "react-dom": "window.ReactDOM"
+}
+```
+
+### 禁用生成 vendor
+
+在多 entry 的情况下，构建时除了每个 entry 会生成一个 bundle 文件外，同时会根据依赖生成 vendor.css&vendor.js，如果不需要生成这个文件，可以通过下面的方式配置：
+
+```js
+"buildConfig": {
+  "disableVendor": true
+}
+```
+
 ## 自定义配置 - .webpackrc.js
 
 ice-scripts 除了提供 buildConfig 用于快速的配置入口之外，也支持自定义配置需求，几乎可完全自定义 webpack 的所有配置项；在项目根目录新建 `.webpackrc.js` 文件对默认配置进行定制和覆盖。`.webpackrc.js` 文件需要导出一个函数，其支持的参数可以参考 `webpack` [官方文档](https://webpack.js.org/concepts/output/)。
@@ -164,20 +246,6 @@ module.exports = (context) => {
 ```
 
 以下为一些常见的自定义需求：
-
-### 修改编译的路径为 dist
-
-```js
-const path = require('path');
-
-module.exports = (context) => {
-  return {
-    output: {
-      path: path.resolve('dist'),
-    },
-  };
-};
-```
 
 ### 修改 publicPath
 
@@ -293,7 +361,17 @@ favicon, index.html 等。
 // index.js
 import styles from './index.module.scss';
 
-<Button className={styles.btn}>OK</Button>
+<Button className={styles.btn}>OK</Button>;
+```
+
+## Moment.js 按需加载
+
+基础组件 `@alifd/next` 里的时间相关组件依赖了 moment，但是为了业务可以优化 moment 的包大小，所以 `@alifd/next` 里将 moment 作为自己的 peerDependencies 而非 dependencies，因此项目使用到时间组件时需要自行引入 moment 依赖。moment 里有针对国际化语言的大量代码，如果不做任何处理的话会导致 bundle 变大，因此 ice-scripts 默认对 moment 文案做了按需加载，只有通过 `import './locale/zh-cn'` 才会引入对应文案代码。
+
+```
+// index.js
+
+import 'moment/locale/xx.js';
 ```
 
 ## 主题配置 - themeConfig

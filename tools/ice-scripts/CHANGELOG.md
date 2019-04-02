@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.9.3
+
+- [fix] 内网 init 项目未生成 abc.json
+- [fix] 组件 build 未合并自定义 buildConfig
+- [chore] 接入 ice-npm-utils
+
+## 1.9.2
+
+- [fix] 移除掉 babel-runtime 的 alias，防止项目依赖里有不同版本导致无法构建
+- [chore] 不写死 webpack 的依赖版本，防止多份 webpack 导致构建报错
+
+## 1.9.1
+
+- [fix] 修复 @babel/runtime alias 路径错误问题
+
+## 1.9.0
+
+- [feat] 支持 init 项目
+- [feat] 支持 dev/build 区块&业务组件
+- [feat] 新增 buildConfig.disableVendor 配置
+- [feat] dev/build 前检测是否已安装依赖
+- [chore] 移除部分无用的依赖
+
+## 1.8.13
+
+- [feat] 内置对 moment 的多语言优化
+- [feat] 支持 outputAssetsPath 配置
+- [fix] 修复 externals 的逻辑
+
 ## 1.8.12
 
 - [fix] 修复 proxy target 语法错误

@@ -1,7 +1,7 @@
 ---
 title: 如何使用 TypeScript
 order: 10
-category: 进阶指南
+
 ---
 
 ## 为什么使用 TypeScript
@@ -84,7 +84,7 @@ class App extends React.PureComponent<IProps, IState> {
 $ npm update ice-script
 ```
 
-- 新增 .tsconfig 文件
+- 新增 `tsconfig.json` 文件
 
 ```js
 {

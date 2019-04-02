@@ -3,8 +3,12 @@ module.exports = {
     desc: 'generate a new project from a template',
     options: [
       {
-        name: '--offline',
-        desc: 'use cached template',
+        name: '--template [template]',
+        desc: 'use npm template',
+      },
+      {
+        name: '--type [type]',
+        desc: 'materail type, e.g. block/component',
       },
     ],
   },
@@ -21,7 +25,7 @@ module.exports = {
       {
         name: '--analyzer',
         desc: 'bunlde analyzer',
-      }
+      },
     ],
   },
   build: {
@@ -47,7 +51,7 @@ module.exports = {
     desc: 'Sync materials json to https://fusion.design',
   },
   'sync-unpkg': {
-    desc: 'Sync materials json to https://unpkg.com'
+    desc: 'Sync materials json to https://unpkg.com',
   },
   clear: {
     desc: 'Clear cache data',

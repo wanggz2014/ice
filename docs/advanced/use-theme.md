@@ -1,7 +1,7 @@
 ---
 title: 配置项目主题
 order: 9
-category: 进阶指南
+
 ---
 
 > 该能力需要满足项目依赖的基础组件为 `@alifd/next`，如果依赖的是 `@icedesign/base` 请参考 [这篇文档](https://github.com/alibaba/ice/wiki/0.x-theme)
@@ -53,6 +53,18 @@ npm install @icedesign/theme --save-dev
 ```
 
 然后重新 dev 即可生效。
+
+### 使用主题包里的自定义 Icon
+
+在配置主题时，可以通过 iconfont 导入一些自定义的 icon，这些 icon 在项目代码里通过基础组件 Icon 即可使用：
+
+```jsx
+import { Icon } from 'react';
+
+<Icon type="xxxx" />
+```
+
+注意：工程工具使用 ice-scripts 才能使用这个能力
 
 ## 配置变量方式
 

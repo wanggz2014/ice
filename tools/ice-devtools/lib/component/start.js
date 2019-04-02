@@ -1,3 +1,5 @@
+/* Deprecated */
+/* eslint-disable */
 const debug = require('debug')('ice:start:block');
 const chalk = require('chalk');
 const { join } = require('path');
@@ -12,6 +14,15 @@ const router = require('../../utils/demo-router');
 const PORT = 5000;
 
 module.exports = function blockDevStart(cwd, opt) {
+  console.log();
+  console.log(chalk.yellow(`[WARNING] 此功能将在下个版本废弃，请使用 ice-scripts 开发/构建`));
+  console.log();
+  console.log(chalk.cyan('    npm install ice-scripts@latest -g'));
+  console.log(chalk.cyan('    ice dev'));
+  console.log();
+  console.log('升级访问 https://github.com/alibaba/ice/wiki/ice-devtools-upgrade');
+  console.log();
+
   const config = getBaseConfig(cwd);
 
   const demos = getDemos(cwd);
@@ -21,7 +32,7 @@ module.exports = function blockDevStart(cwd, opt) {
     const demoFile = join(cwd, 'demo', demoName + '.md');
     config.entry(`__Component_Dev__.${demoName}`).add(demoFile);
   });
-  
+
   // devServer
   let { port = PORT } = opt;
   port = parseInt(port, 10);
@@ -60,8 +71,8 @@ module.exports = function blockDevStart(cwd, opt) {
   const compiler = webpack(options);
   const server = new WebpackDevServer(compiler, options.devServer);
   server.listen(port, '0.0.0.0', () => {
-    console.log(' ');
+    console.log();
     console.log(chalk.yellow(`Starting at http://127.0.0.1:${port}`));
-    console.log(' ');
+    console.log();
   });
 };

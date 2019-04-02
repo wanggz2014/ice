@@ -13,7 +13,7 @@ const to = require('await-to-js').default;
 
 const config = require('../../config');
 
-const DetailError = require('../../error-handler');
+const { DetailError } = require('../../error-handler');
 const materialUtils = require('../../template/utils');
 const npmRequest = require('../../utils/npmRequest');
 const logger = require('../../logger');
@@ -301,14 +301,11 @@ function extractBlock(
 
 // 超时自动重试
 const retryCount = 2;
-const retryExtractBlock = autoRetry(extractBlock, retryCount, (err) => {
-  if (
-    !err.code ||
-    (err.code !== 'ETIMEDOUT' && err.code !== 'ESOCKETTIMEDOUT')
-  ) {
-    throw err;
-  }
-});
+const retryExtractBlock = autoRetry(
+  extractBlock,
+  retryCount,
+  (err) => err.code && (err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT')
+);
 
 /**
  * 从 registry 获取 npm 包的 tarbal URL
@@ -353,7 +350,7 @@ function getDependenciesFromNpm({ npm, version = 'latest', registry }) {
 }
 
 const lang = 'cn';
-exports.createInterpreter = function(type, data = {}, interpreter) {
+exports.createInterpreter = function (type, data = {}, interpreter) {
   const localeObj = config.locale[type] || config.locale.unknown;
   const message = localeObj[lang];
   return new Promise((resolve) => {
@@ -366,7 +363,7 @@ exports.createInterpreter = function(type, data = {}, interpreter) {
 /**
  * 检测是否是合法的 ICE 项目
  */
-exports.checkValidICEProject = function(dir) {
+exports.checkValidICEProject = function (dir) {
   if (!fs.existsSync(dir)) {
     return false;
   }
@@ -435,7 +432,6 @@ function getDependenciesFromCustom(block) {
 exports.extractCustomBlock = extractCustomBlock;
 exports.getDependenciesFromCustom = getDependenciesFromCustom;
 exports.getTarballURL = getTarballURL;
-exports.extractBlock = retryExtractBlock;
 exports.getDependenciesFromNpm = getDependenciesFromNpm;
 exports.getDependenciesFromMaterial = getDependenciesFromMaterial;
 exports.downloadBlockToPage = downloadBlockToPage;

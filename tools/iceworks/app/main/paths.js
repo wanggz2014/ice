@@ -21,30 +21,14 @@ const NPM_CLI = path.join(APP_PATH, 'node_modules', 'npm', 'bin', 'npm-cli.js');
 
 const NRM_CLI = path.join(APP_PATH, 'node_modules', 'nrm', 'cli.js');
 
-const SASS_BINARY_PATH = isDev
-  ? path.join(
-      process.cwd(),
-      'binary',
-      process.platform,
-      'sass',
-      `${process.platform}-x64-57_binding.node`
-    )
-  : path.join(
-      process.resourcesPath,
-      'binary',
-      'sass',
-      `${process.platform}-x64-57_binding.node`
-    );
-
 const NODE_FRAMEWORKS = ['koa2', 'midway', 'midwayAli'];
 
 const getClientPath = (destDir, framework) => {
   if (framework && NODE_FRAMEWORKS.includes(framework)) {
-    return path.join(destDir, 'client'); 
-  } else {
-    // 包含两种情况：framework为koa（即老koa项目）、纯前端项目
-    return path.join(destDir); 
+    return path.join(destDir, 'client');
   }
+  // 包含两种情况：framework为koa（即老koa项目）、纯前端项目
+  return path.join(destDir);
 };
 
 const getServerPath = (destDir, framework) => {
@@ -62,9 +46,8 @@ const getClientSrcPath = (destDir, framework) => {
   const clientPath = getClientPath(destDir, framework);
   if (framework && framework === 'koa') {
     return path.join(clientPath, 'client');
-  } else {
-    return path.join(clientPath, 'src');
   }
+  return path.join(clientPath, 'src');
 };
 
 module.exports = {
@@ -72,11 +55,10 @@ module.exports = {
   APP_PATH,
   NPM_CLI,
   NRM_CLI,
-  SASS_BINARY_PATH,
   NODE_PATH,
   WIN_NPM_CMD,
   NODE_FRAMEWORKS,
   getClientPath,
   getClientSrcPath,
-  getServerPath
+  getServerPath,
 };

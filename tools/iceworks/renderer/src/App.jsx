@@ -29,6 +29,10 @@ const { settings } = services;
 // pages
 import history from './history';
 import Layout from './Layout';
+
+// components
+import RegistryNotice from './components/RegistryNotice';
+
 const {
   PageHome,
   PageScaffolds,
@@ -62,7 +66,7 @@ class App extends Component {
     settings.set('materials', materials.filter(material => {
       if (['Fusion 物料源', 'Bizchart 物料源'].includes(material.name)) {
         return false;
-      } 
+      }
       return true;
     }));
   }
@@ -119,6 +123,7 @@ class App extends Component {
         intro={intro}
       >
         <Layout>
+          <RegistryNotice />
           <VisibleWrapper
             visible={
               this.state.activePathname === '/' ||

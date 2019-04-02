@@ -1,7 +1,10 @@
 const fs = require('fs');
 const path = require('path');
+
 const appDirectory = fs.realpathSync(process.cwd());
 const hotDevClientPath = require.resolve('react-dev-utils/webpackHotDevClient');
+
+const cliInstance = require('../utils/cliInstance');
 
 function entryWithApp(entry) {
   if (typeof entry === 'string') {
@@ -46,12 +49,12 @@ module.exports = (entry) => {
     });
   }
 
-  if (process.env.NODE_ENV !== 'production' && !process.env.DISABLED_RELOAD) {
+  if (process.env.NODE_ENV !== 'production' && !cliInstance.get('disableReload')) {
     entries = enhanceEntries(entries, hotDevClientPath);
   }
 
   // Note：https://github.com/alibaba/ice/pull/834
-  if (process.env.INJECT_BABEL !== 'runtime') {
+  if (cliInstance.get('injectBabel') !== 'runtime') {
     entries = enhanceEntries(entries, require.resolve('@babel/polyfill'));
   }
 

@@ -1,5 +1,4 @@
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
-const colors = require('chalk');
 const ExtractCssAssetsWebpackPlugin = require('extract-css-assets-webpack-plugin');
 const fs = require('fs');
 const path = require('path');
@@ -14,6 +13,8 @@ const CheckIceComponentsDepsPlugin = require('../plugins/check-ice-components-de
 const normalizeEntry = require('../utils/normalizeEntry');
 const paths = require('./paths');
 const getEntryHtmlPlugins = require('./getEntryHtmlPlugins');
+const cliInstance = require('../utils/cliInstance');
+const log = require('../utils/log');
 
 module.exports = ({ buildConfig = {}, themeConfig = {}, entry, pkg = {} }) => {
   const defineVriables = {
@@ -27,20 +28,19 @@ module.exports = ({ buildConfig = {}, themeConfig = {}, entry, pkg = {} }) => {
     defineVriables.THEME = JSON.stringify(themeConfig.theme);
   }
 
+  const filename = cliInstance.get('hash') ? '[name].[hash:6].css' : '[name].css';
+
   const plugins = [
     new webpack.DefinePlugin(defineVriables),
     new MiniCssExtractPlugin({
-      filename: process.env.HASH ? 'css/[name].[hash:6].css' : 'css/[name].css',
-      chunkFilename: process.env.HASH
-        ? 'css/[id].[hash:6].css'
-        : 'css/[id].css',
+      filename: path.join(buildConfig.outputAssetsPath.css || '', filename),
     }),
     // FIX ISSUE: https://github.com/webpack-contrib/mini-css-extract-plugin/issues/250
     new FilterWarningsPlugin({
       exclude: /Conflicting order between:/,
     }),
     new CheckIceComponentsDepsPlugin({
-      pkg
+      pkg,
     }),
     new SimpleProgressPlugin(),
     new CaseSensitivePathsPlugin(),
@@ -70,16 +70,18 @@ module.exports = ({ buildConfig = {}, themeConfig = {}, entry, pkg = {} }) => {
         stylePath: 'style.js',
       },
     ]),
+    // Moment.js is an extremely popular library that bundles large locale files
+    // by default due to how Webpack interprets its code. This is a practical
+    // solution that requires the user to opt into importing specific locales.
+    // https://github.com/jmblog/how-to-optimize-momentjs-with-webpack
+    new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
   ];
 
   // 增加 html 输出，支持多页面应用
   Array.prototype.push.apply(plugins, getEntryHtmlPlugins(entry));
 
   if (paths.publicUrl === './') {
-    console.log(
-      colors.green('Info:'),
-      '离线化构建项目，自动下载网络资源，请耐心等待'
-    );
+    log.info('离线化构建项目，自动下载网络资源，请耐心等待');
     plugins.push(
       new ExtractCssAssetsWebpackPlugin({
         outputPath: 'assets',
@@ -142,11 +144,7 @@ module.exports = ({ buildConfig = {}, themeConfig = {}, entry, pkg = {} }) => {
   // HACK 1.x 不会走到这个逻辑
   if (skinOverridePath && fs.existsSync(skinOverridePath)) {
     // eslint-disable-next-line no-console
-    console.log(
-      colors.green('Info:'),
-      '皮肤 override 文件存在',
-      path.join(themePackage, 'override.scss')
-    );
+    log.info('皮肤 override 文件存在', path.join(themePackage, 'override.scss'));
     plugins.push(
       new AppendStyleWebpackPlugin({
         variableFile: variableFilePath,
@@ -156,7 +154,7 @@ module.exports = ({ buildConfig = {}, themeConfig = {}, entry, pkg = {} }) => {
         distMatch: /\.css/,
         themeNextVersion,
         compileThemeIcon: false,
-        pkg
+        pkg,
       })
     );
   }

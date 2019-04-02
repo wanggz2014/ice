@@ -1,9 +1,13 @@
+/* Deprecated */
+/* eslint-disable */
 const { parseMarkdownParts } = require('./markdown-helper');
 const { join, basename } = require('path');
 const { existsSync } = require('fs');
 
 module.exports = function demoLoader(markdown) {
-  const { code, compiledCode, meta, content } = parseMarkdownParts(markdown);
+  const { compiledCode } = parseMarkdownParts(markdown, {
+    sliceCode: true
+  });
   const stylePath = join(process.cwd(), 'src/main.scss');
 
   const filePath = this.resourcePath;

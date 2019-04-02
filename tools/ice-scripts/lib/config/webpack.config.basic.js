@@ -1,5 +1,6 @@
 const { differenceWith } = require('lodash');
 const webpackMerge = require('webpack-merge');
+const path = require('path');
 
 const getUserConfig = require('./getUserConfig');
 const getRules = require('./getRules');
@@ -9,8 +10,9 @@ const getEntryByPages = require('./getEntryByPages');
 const getResolveAlias = require('./getResolveAlias');
 const pkg = require('./packageJson');
 const checkTemplateHasReact = require('../utils/checkTemplateHasReact');
-const debug = require('../debug');
+const log = require('../utils/log');
 const paths = require('./paths');
+const cliInstance = require('../utils/cliInstance');
 
 /**
  * 可以在 buildConfig 中覆盖的配置项:
@@ -44,7 +46,21 @@ const pluginsUnique = (uniques) => {
 module.exports = function getWebpackConfigBasic({ entry, buildConfig = {} }) {
   const { themeConfig = {} } = pkg;
   const hasExternalReact = checkTemplateHasReact(paths.appHtml);
-  debug.info('hasExternalReact', hasExternalReact);
+
+  if (buildConfig.output && buildConfig.output.path) {
+    buildConfig.output.path = path.resolve(paths.appDirectory, buildConfig.output.path);
+  }
+
+  buildConfig.outputAssetsPath = {
+    css: 'css',
+    js: 'js',
+    ...buildConfig.outputAssetsPath,
+  };
+
+  log.verbose('hasExternalReact', hasExternalReact);
+
+  log.info('--inject-babel: ', cliInstance.get('injectBabel'));
+
   const webpackConfig = {
     mode: process.env.NODE_ENV,
     context: paths.appDirectory,
@@ -52,7 +68,7 @@ module.exports = function getWebpackConfigBasic({ entry, buildConfig = {} }) {
     output: Object.assign(
       {
         path: paths.appBuild,
-        filename: process.env.HASH ? 'js/[name].[hash:6].js' : 'js/[name].js',
+        filename: path.join(buildConfig.outputAssetsPath.js || '', (cliInstance.get('hash') ? '[name].[hash:6].js' : '[name].js')),
         publicPath: paths.servedPath,
       },
       buildConfig.output || {}
@@ -62,27 +78,38 @@ module.exports = function getWebpackConfigBasic({ entry, buildConfig = {} }) {
       extensions: ['.js', '.jsx', '.json', '.html', '.ts', '.tsx'],
       alias: getResolveAlias(buildConfig),
     },
-    externals:
-      buildConfig.externals || hasExternalReact
-        ? { react: 'window.React', 'react-dom': 'window.ReactDOM' }
-        : {},
+    externals: {
+      ...(hasExternalReact ? { react: 'window.React', 'react-dom': 'window.ReactDOM' } : {}),
+      ...buildConfig.externals,
+    },
     module: {
       rules: getRules(buildConfig, themeConfig),
     },
     plugins: getPlugins({ entry, buildConfig, themeConfig, pkg }),
     optimization: {
       splitChunks: {
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendor',
-            chunks: 'initial',
-            minChunks: 2,
-          },
-        },
+        cacheGroups: {},
       },
     },
   };
+
+  // HACK
+  if (pkg.type === 'component' || pkg.type === 'block') {
+    buildConfig.disableVendor = true;
+  }
+
+  if (buildConfig.disableVendor) {
+    log.info('buildCondfig.disableVendor', buildConfig.disableVendor);
+  } else {
+    webpackConfig.optimization.splitChunks.cacheGroups = {
+      vendor: {
+        test: /[\\/]node_modules[\\/]/,
+        name: 'vendor',
+        chunks: 'initial',
+        minChunks: 2,
+      },
+    };
+  }
 
   const userConfig = getUserConfig();
   const finalWebpackConfig = webpackMerge({
