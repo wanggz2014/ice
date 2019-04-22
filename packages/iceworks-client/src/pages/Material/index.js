@@ -4,8 +4,6 @@ import { Button } from '@alifd/next';
 import useMaterial from '@hooks/useMaterial';
 import { changeText } from '@models/todos';
 
-console.log(changeText);
-
 const Material = () => {
   const { data: { todos }, onChange } = useMaterial([], changeText('Use hooks'));
   return (
