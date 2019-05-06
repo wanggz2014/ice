@@ -5,15 +5,18 @@ const ejs = require('ejs');
 require('./makeTempDir');
 
 const templatesPath = path.join(__dirname, '../templates');
-module.exports = (libary) => {
+module.exports = (libary,tmpPath=null) => {
+  if(tmpPath==null){
+    tmpPath=templatesPath
+  }
   return fs
-    .readdirSync(templatesPath)
+    .readdirSync(tmpPath)
     .filter((fileName) => {
       // hack 通过前缀指定生成 page 用到的模板
       return fileName.indexOf(libary) === 0;
     })
     .map((file) => {
-      const filePath = path.join(templatesPath, file);
+      const filePath = path.join(tmpPath, file);
       const fileStr = fs.readFileSync(filePath, 'utf-8');
       return {
         compile: ejs.compile(fileStr, {

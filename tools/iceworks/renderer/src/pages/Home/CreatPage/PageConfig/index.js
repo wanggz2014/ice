@@ -356,7 +356,8 @@ class PageConfig extends Component {
     };
 
     // 允许设置导航名
-    const availableRouter = isIceApp || isAngularApp || isRaxApp;
+    //const availableRouter = isIceApp || isAngularApp || isRaxApp;
+    const availableRouter=false;
 
     return (
       <Dialog

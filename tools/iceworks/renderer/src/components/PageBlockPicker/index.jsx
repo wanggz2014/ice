@@ -170,10 +170,17 @@ class PageBlockPicker extends Component {
       .then(() => {
         progress.end();
         pageBlockPicker.close();
-        Notification.success({
-          message: '区块下载完成，区块需要自行引入到页面中',
-          duration: 8,
-        });
+        if(scaffolder.utils.appendBlock(clientSrcPath,blocks,pageName)){
+          Notification.success({
+            message: '区块下载完成，区块自动引入页面',
+            duration: 8,
+          });
+        }else{
+          Notification.warning({
+            message: '区块下载完成，区块自动引入页面异常，请手动引入',
+            duration: 8,
+          });
+        }
       })
       .catch((error) => {
         pageBlockPicker.downloadDone();

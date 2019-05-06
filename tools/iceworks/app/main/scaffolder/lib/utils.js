@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 const mkdirp = require('mkdirp');
+const prettier=require('prettier');
 const request = require('request');
 const tar = require('tar');
 const upperCamelCase = require('uppercamelcase');
@@ -130,13 +131,13 @@ async function downloadBlockToPage(
   mkdirp.sync(componentsDir);
 
   // 日志上报
-  glodlog.record({
-    type: 'app',
-    action: 'download-block',
-    data: {
-      name: block.name,
-    },
-  });
+  // glodlog.record({
+  //   type: 'app',
+  //   action: 'download-block',
+  //   data: {
+  //     name: block.name,
+  //   },
+  // });
 
   // 根据项目版本下载
   const pkg = getPackageByPath(clientPath);
@@ -298,6 +299,65 @@ const retryExtractBlock = autoRetry(
   (err) => err.code && (err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT')
 );
 
+
+/**
+   * 页面增加区块引入
+   */
+function appendBlock(clientSrcPath,blocks,pageName){
+  try{
+    //added by wgz 页面增加区块引用
+    //核对是否为vue
+    const pagePath = path.join(
+      clientSrcPath,
+      'pages',
+      pageName,
+      pageName+'.vue'
+    );
+    if(fs.existsSync(pagePath)){
+      //1. 生成import代码、component代码、template代码
+      const appendImport = ['//import_placehold','\r\n'];
+      const appendComp = ['//comp_placehold','\r\n'];
+      const appendTemp=['<!-- temp_placehold -->','\r\n'];
+      blocks.forEach(({ alias }) => {
+        appendImport.push("import "+alias+" from './components/"+alias+"';");
+        appendComp.push(alias+",");
+        appendTemp.push('<'+alias+' />');
+      })
+
+      //2. 使用正则进行内容添加
+      const pageContent = fs.readFileSync(pagePath, 'utf-8');
+      const newContent = pageContent
+          .replace(new RegExp(`//import_placehold`, 'g'), () => {
+            return appendImport.join(" ");
+          })
+          .replace(new RegExp(`//comp_placehold`, 'g'), () => {
+            return appendComp.join(" ");
+          })
+          .replace(new RegExp(`<!-- temp_placehold -->`, 'g'), () => {
+            return appendTemp.join(" ");
+          });
+      
+      //3. 写入目标文件
+      let parser = 'vue' ;
+      const prettierConfig={
+        singleQuote: true, // prefer 单引号
+        trailingComma: 'es5', // 追加末尾逗号
+      };
+
+      const rendered = prettier.format(
+        newContent,
+        Object.assign({}, prettierConfig, { parser })
+      );
+      fs.writeFileSync(pagePath, rendered, 'utf-8'); 
+    }
+    return true;
+  }catch(error){
+    logger.error('区块自动引入失败',error);
+    return false;
+  }
+};
+
+
 /**
  * 从 registry 获取 npm 包的 tarbal URL
  * @param {*} npm
@@ -429,3 +489,4 @@ exports.downloadBlockToPage = downloadBlockToPage;
 exports.downloadBlocksToPage = downloadBlocksToPage;
 exports.getPackageByPath = getPackageByPath;
 exports.getProjectVersion = getProjectVersion;
+exports.appendBlock=appendBlock;

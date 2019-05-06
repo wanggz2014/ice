@@ -16,6 +16,7 @@ const appendRouteV3 = require('./appendRouteV3');
 const appendRouteV4 = require('./appendRouteV4');
 const appendMenuV4 = require('./appendMenuV4');
 const logger = require('../../logger');
+const removePage = require('../../scaffolder/lib/removePage');
 const { emitProcess, emitError, emitProgress } = require('../../services/tracking');
 
 /**
@@ -192,6 +193,93 @@ module.exports = async function createPage({
     }
   }
 
+  //added by wgz 根据区块类型进行代码构建
+  /**
+   * 业务逻辑：
+   * block split to  [{layout:layout,blocks:[]}] 
+   * trans {layout,blocks}-> {layout,slotNames:{name,block},slotDefault:[]}
+   * result format: [{layout,slotNames:{name,block},slotDefault:[]}]
+   */
+
+  const renders=[];
+  try{
+    const layoutSplit=[];
+    blocks.forEach(function(block){
+      //布局区块，则增加一个分区
+      if(block.name.indexOf('layout')>-1){
+        const split={
+          layout:block,
+          blocks:[]
+        }
+        layoutSplit.push(split);
+        return;
+      }
+
+      //业务区块，如果不存在布局则提示失败
+      if(block.name.indexOf("layout")==-1&&layoutSplit.length==0){
+        throw new Error('当前页面不存在布局，无法确定业务区块存放位置')
+      }
+
+      const split=layoutSplit[layoutSplit.length-1];
+      split.blocks.push(block)
+    })
+
+    //进行数据格式转换
+    const regExp=new RegExp('<slot\s*(name\s*=\s*"(\w+)"\s*)*>',"g");
+    layoutSplit.forEach(function(split){
+      const layout={
+        layout:split.layout,
+        slotNames:[],
+        slotDefault:[]
+      }
+
+      //init slotName
+      const layoutPath = path.join(
+        clientSrcPath,
+        'pages',
+        pageFolderName,
+        'components',
+        split.layout.alias,
+        'index.vue'
+      );
+      const layoutContent = fs.readFileSync(layoutPath, 'utf-8');    
+      let match=regExp.exec(layoutContent);
+      while (match != null) {
+        //不是default slot
+        if(match[2]!=undefined){
+          logger.debug("slotName:",match[2]);
+          layout.slotNames.push({
+            name:match[2],
+            block:null
+            })
+        }
+        match = regExp.exec(layoutContent);
+      }
+      //put block
+      split.blocks.forEach(function(block){
+        //进行名称匹配
+        const alias=block.alias
+        for(let i=0;i<layout.slotNames.length;i++){
+          if(layout.slotNames[i].name==alias){
+            layout.slotNames[i].block=block;
+            return;
+          }
+        }
+        
+        //无匹配，放入default
+        layout.slotDefault.push(block);
+      })
+      renders.push(layout)
+    })
+  }catch(error){
+    await removePage({
+      clientSrcPath,
+      pageFolderName
+    })
+    logger.error(error);
+    throw error;
+  }
+
   /**
    * 4. 生成 ${pageName}/xxxx 文件
    */
@@ -210,13 +298,16 @@ module.exports = async function createPage({
     // 小写名 home
     pageName,
     scaffoldConfig,
+    renders
   };
 
   currentEvent = 'generatePage';
   emitProcess(currentEvent);
 
-  const done = pageTemplates(libary).reduce((prev, template) => {
+  const templatePath=path.join(clientPath,"src/template");
+  const done = pageTemplates(libary,templatePath).reduce((prev, template) => {
     try {
+      logger.debug("renderData:",renderData);
       const fileContent = template.compile(renderData);
       const fileName = template.fileName
         .replace(/PAGE/g, pageFolderName)
@@ -227,7 +318,10 @@ module.exports = async function createPage({
       let parser = libary === 'vue' ? 'vue' : 'babylon';
       if (fileExt === '.scss') {
         parser = 'scss';
+      }else if(fileExt === '.js'){
+        parser = 'typescript'
       }
+
       const rendered = prettier.format(
         fileContent,
         Object.assign({}, config.prettier, { parser })
