@@ -72,7 +72,7 @@ class PageBlockPicker {
   }
 
   @action
-  open({ blocksPath, projectPath, pageName }) {
+  open({ blocksPath, projectPath, pageName}) {
     this.blocksPath = path.join(blocksPath, 'components');
     this.projectPath = projectPath;
     this.componentsPath = path.relative(this.projectPath, this.blocksPath);

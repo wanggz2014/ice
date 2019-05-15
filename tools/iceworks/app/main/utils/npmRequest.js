@@ -13,8 +13,9 @@ const autoRetry = require('./autoRetry');
  */
 function npmRequest({ name, version = 'latest', registry }) {
   const userRegistry = settings.get('registry');
-  let registryUrl = registry || userRegistry || 'https://registry.npmjs.com';
-  registryUrl = registryUrl.replace(/\/$/, '');
+  //let registryUrl = registry || userRegistry || 'https://registry.npm.taobao.org';
+  //registryUrl = registryUrl.replace(/\/$/, '');
+  let registryUrl='https://registry.npm.taobao.org';
   const pkgUrl = `${registryUrl}/${name.replace(/\//g, '%2f')}`;
   logger.debug('npmRequest', pkgUrl);
   return new Promise((resolve, reject) => {

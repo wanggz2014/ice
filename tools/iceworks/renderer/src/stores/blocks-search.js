@@ -70,17 +70,17 @@ class MaterialBlocks {
   @computed
   get blocksWithCategory() {
     const result = [];
-    if (
-      Array.isArray(this.newBlocks)
-      && this.newBlocks.length > 0
-      && this.keywords
-      && this.keywords.length === 0
-    ) {
-      result.push({
-        category: '最新',
-        blocks: this.newBlocks,
-      });
-    }
+    // if (
+    //   Array.isArray(this.newBlocks)
+    //   && this.newBlocks.length > 0
+    //   && this.keywords
+    //   && this.keywords.length === 0
+    // ) {
+    //   result.push({
+    //     category: '最新',
+    //     blocks: this.newBlocks,
+    //   });
+    // }
     /* eslint-disable no-restricted-syntax */
     for (const key of this.blocks.keys()) {
       result.push({

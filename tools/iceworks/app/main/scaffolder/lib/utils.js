@@ -126,6 +126,11 @@ async function downloadBlockToPage(
     pageName,
     'components'
   );
+  // const componentsDir = path.join(
+  //   clientSrcPath,
+  //   'components'
+  // );
+
 
   // 保证文件夹存在
   mkdirp.sync(componentsDir);

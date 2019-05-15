@@ -34,6 +34,7 @@ class Extensions {
         description: '展示当前项目中 layouts 目录下的所有布局。',
         author: 'ICE TEAM',
         extra: '仅支持 react 项目',
+        initEnable:false,
         version: '1.0.0',
         conditions: {
           libraryType: 'react',
@@ -48,6 +49,7 @@ class Extensions {
         author: 'ICE TEAM',
         version: '1.0.0',
         extra: 'cli 需 ice-scripts',
+        initEnable:false,
         conditions: {
           libraryType: 'react',
           applicationType: 'ice',
@@ -60,6 +62,7 @@ class Extensions {
         description:
           '收集项目源代码中的 TODO、FIXME等注释信息，提醒您项目中还有什么工作没有完成。',
         author: 'ICE TEAM',
+        initEnable:false,
         version: '1.0.0',
       },
       {
@@ -120,6 +123,8 @@ class Extensions {
 
       if (extensionStorageValue && typeof extensionStorageValue === 'string') {
         checked[extension.name] = extensionStorageValue === 'true';
+      } else if(extension.initEnable!=undefined){
+        checked[extension.name]=extension.initEnable
       } else {
         // 默认开启
         checked[extension.name] = true;

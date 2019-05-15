@@ -2,7 +2,11 @@
 import { Dialog, Button, Form, Input, Field, Feedback } from '@icedesign/base';
 import { observer, inject } from 'mobx-react';
 import { toJS } from 'mobx';
+import fs from 'fs';
+import path from 'path';
 import React, { Component } from 'react';
+import JSONInput from 'react-json-editor-ajrm';
+import locale    from 'react-json-editor-ajrm/locale/en';
 
 // import ReactDOM from 'react-dom';
 import uppercamelcase from 'uppercamelcase';
@@ -32,6 +36,12 @@ const pageExists = (pages, name = '') => {
   });
 };
 
+//added by wgz 
+//desc: json edit
+// const handleEdit = (edit)=>{}
+// const handleAdd = (add)=>{}
+// const handleDelete=(del)=>{}
+
 @inject('projects', 'newpage', 'blocks', 'customBlocks', 'progress')
 @observer
 class PageConfig extends Component {
@@ -49,7 +59,23 @@ class PageConfig extends Component {
   constructor(props) {
     super(props);
     this.field = new Field(this);
-  }
+    this.pageMeta={}
+    this.projectMenu=undefined
+  };
+
+  handleMetaChange=(params)=>{
+    //this.pageMeta=JSON.parse(text);
+    if(params.jsObject){
+      this.pageMeta=params.jsObject
+    }
+  };
+
+  handleMenuChange=(params)=>{
+    //this.pageMeta=JSON.parse(text);
+    if(params.jsObject){
+      this.projectMenu=params.jsObject
+    }
+  };
 
   handleClose = () => {
     if (!this.props.newpage.isCreating) {
@@ -223,6 +249,8 @@ class PageConfig extends Component {
               // hack vue
               libary: this.props.libary,
               progressFunc: progress.handleProgressFunc,
+              pageMeta: this.pageMeta,
+              projectMenu:this.projectMenu,
               interpreter: ({ type, message, data }, next) => {
                 logger.info(type, message);
                 switch (type) {
@@ -359,6 +387,51 @@ class PageConfig extends Component {
     //const availableRouter = isIceApp || isAngularApp || isRaxApp;
     const availableRouter=false;
 
+    //核对是否为页面物料
+    /**
+     * 业务逻辑：
+     * block is page  
+     *    only one can this page contain
+     */
+    const blocks = toJS(this.props.selectedBlocks);
+    let pageBlock=undefined; 
+    let hasError=false;
+    blocks.forEach(function(block){
+      if(block.name.indexOf('page')>-1){
+        if(pageBlock){
+          //throw new Error('页面只能包含一个页面物料')
+          hasError=true;
+        }
+        pageBlock=block;
+      }
+    })
+
+    if((pageBlock&&blocks.size>0)||hasError){
+      //throw new Error('页面只能包含一个页面物料')
+      newpage.isCreating = false;
+      newpage.closeSave();
+      newpage.toggle();
+      Feedback.toast.error(
+        `页面只能包含一个页面物料，请修改后重试`
+      );
+    }
+
+    //设置页面初始值
+    if(pageBlock){
+      //find by temp path
+      const pageMetaPath=path.join(currentProject.clientPath,"src","template",pageBlock.name+".json")
+      const metaText = fs.readFileSync(pageMetaPath);
+      this.pageMeta = JSON.parse(metaText.toString());
+
+      const projectMenuPath=path.join(currentProject.clientPath,"src","config","menu.json");
+      const menuText=fs.readFileSync(projectMenuPath);
+      this.projectMenu=JSON.parse(menuText.toString());
+    }
+
+
+    const dialogWith=pageBlock?600:300
+    const dialogHeight=pageBlock?550:50
+
     return (
       <Dialog
         title="填写页面信息"
@@ -384,17 +457,17 @@ class PageConfig extends Component {
               确定
             </Button>
           </div>
-)}
+          )}
       >
         <Form
           size="small"
           direction="ver"
-          style={{ width: 320, paddingTop: '30px' }}
+          style={{ width: dialogWith,height:dialogHeight, paddingTop: '30px' }}
           field={this.field}
         >
-          <FormItem {...formItemLayout} required label="页面目录名">
+          <FormItem {...formItemLayout} required label="页面目录">
             <Input
-              style={{ width: 200 }}
+              style={{ width: dialogWith-120 }}
               {...init('pageName', {
                 initValue: generatePageName(this.props.newpage.pages),
                 rules: [
@@ -428,39 +501,27 @@ class PageConfig extends Component {
               placeholder="请输入页面目录名，字母与数字组合，字母开头"
             />
           </FormItem>
-          {availableRouter && (
-            <FormItem {...formItemLayout} required label="路由路径">
-              <Input
-                style={{ width: 200 }}
-                {...init('routePath', {
-                  initValue: generatePageName(this.props.newpage.pages),
-                  rules: [
-                    {
-                      required: true,
-                      message: '不能为空',
-                      trigger: ['onBlur', 'onChange'],
-                    },
-                    {
-                      pattern: /^(\/?)([a-zA-Z0-9:])([a-zA-Z0-9:]*)((\/)?[a-zA-Z0-9:]+)$/,
-                      message:
-                        '请输入小写字母数字组合，支持二级路由以 `/` 分隔',
-                      trigger: ['onBlur', 'onChange'],
-                    },
-                  ],
-                })}
-                placeholder="请输入小写字母数字组合，支持二级路由以 `/` 分隔"
+          {pageBlock && (
+            <FormItem {...formItemLayout} required label="页面配置">
+              <JSONInput
+                  id          = 'pageMeta'
+                  locale      = { locale }
+                  placeholder = {this.pageMeta}
+                  widht       = '500px'
+                  height      = '250px'
+                  onChange    = {this.handleMetaChange}
               />
             </FormItem>
           )}
-          {availableRouter && (
-            <FormItem {...formItemLayout} label="页面导航名">
-              <Input
-                style={{ width: 200 }}
-                {...init('routeText', {
-                  initValue: generateNavName(this.props.newpage.pages),
-                  rules: [{ trigger: ['onBlur', 'onChange'] }],
-                })}
-                placeholder="为空则不生成导航项"
+          {pageBlock && (
+            <FormItem {...formItemLayout} required label="导航配置">
+              <JSONInput
+                  id          = 'projectMenu'
+                  locale      = { locale }
+                  placeholder = {this.projectMenu}
+                  widht       = '500px'
+                  height      = '250px'
+                  onChange    = {this.handleMenuChange}
               />
             </FormItem>
           )}

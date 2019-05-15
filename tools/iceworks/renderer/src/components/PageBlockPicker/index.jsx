@@ -1,9 +1,13 @@
-import { Dialog, Button, Feedback, Balloon } from '@icedesign/base';
+import { Dialog, Button, Feedback, Balloon, Form } from '@icedesign/base';
 import { inject, observer } from 'mobx-react';
 import { toJS } from 'mobx';
 import Notification from '@icedesign/notification';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import JSONInput from 'react-json-editor-ajrm';
+import locale    from 'react-json-editor-ajrm/locale/en';
+import path from 'path';
+import fs from 'fs';
 
 import {
   dependenciesFormat,
@@ -22,6 +26,7 @@ import logger from '../../lib/logger';
 import './index.scss';
 
 const { scaffolder } = services;
+const FormItem = Form.Item;
 
 // 向页面新增 block 的功能
 // 包括展示现有 page 下的 blocks 以及选择新 block 的管理
@@ -32,6 +37,26 @@ class PageBlockPicker extends Component {
   static propTypes = {
     blocks: PropTypes.object.isRequired,
     pageBlockPicker: PropTypes.object.isRequired,
+  };
+
+  constructor(props) {
+    super(props);
+    this.pageMeta={}
+    this.projectMenu=undefined
+  };
+
+  handleMetaChange=(params)=>{
+    //this.pageMeta=JSON.parse(text);
+    if(params.jsObject){
+      this.pageMeta=params.jsObject
+    }
+  };
+
+  handleMenuChange=(params)=>{
+    //this.pageMeta=JSON.parse(text);
+    if(params.jsObject){
+      this.projectMenu=params.jsObject
+    }
   };
 
   /**
@@ -59,6 +84,28 @@ class PageBlockPicker extends Component {
       return false;
     }
   };
+
+  handlePageClose=()=>{
+    const { pageBlockPicker } = this.props;
+    pageBlockPicker.close();
+  }
+
+  handlePageOk=()=>{
+    const { pageBlockPicker } = this.props;
+    const existBlocks=pageBlockPicker.existBlocks;
+    const blockPath=path.join(
+      pageBlockPicker.blocksPath,
+      existBlocks[0],
+      'meta.json');
+    
+    fs.writeFileSync(blockPath,  JSON.stringify(this.pageMeta, null, 2), 'utf-8');
+    
+    const menuPath=path.join(this.props.pageBlockPicker.projectPath,'src','config','menu.json');
+    fs.writeFileSync(menuPath,  JSON.stringify(this.projectMenu, null, 2), 'utf-8');
+
+    pageBlockPicker.close();
+  }
+
 
   /**
    * 兜底逻辑，将依赖信息写入到 package.json 里
@@ -193,6 +240,71 @@ class PageBlockPicker extends Component {
   };
 
   render() {
+    const existBlocks=this.props.pageBlockPicker.existBlocks;
+    //核对是否为页面物料
+    if(existBlocks.length>0&&existBlocks[0].toUpperCase().indexOf("PAGE">-1)){
+      const blockPath=path.join(
+        this.props.pageBlockPicker.blocksPath,
+        existBlocks[0],
+        'meta.json');
+      //console.log(metaJson);
+      this.pageMeta=JSON.parse(fs.readFileSync(blockPath).toString());
+
+      const menuPath=path.join(this.props.pageBlockPicker.projectPath,'src','config','menu.json');
+      this.projectMenu=JSON.parse(fs.readFileSync(menuPath).toString())
+
+      return (
+        <Dialog
+          title="填写页面信息"
+          visible={this.props.pageBlockPicker.visible}
+          onClose={this.handlePageClose}
+          onCancel={this.handlePageClose}
+          footer={(
+            <div>
+              <Button
+                size="small"
+                onClick={this.handlePageClose}
+              >
+                取消
+              </Button>
+              <Button
+                size="small"
+                type="primary"
+                onClick={this.handlePageOk}
+              >
+                确定
+              </Button>
+            </div>
+            )}
+        >
+          <Form
+            size="small"
+            direction="ver"
+            style={{ width: 600,height:530, paddingTop: '30px' }}
+            field={this.field}
+          >
+            <FormItem  required label="页面配置">
+              <JSONInput
+                  locale      = { locale }
+                  placeholder = {this.pageMeta}
+                  widht       = '500px'
+                  height      = '250px'
+                  onChange    = {this.handleMetaChange}
+              />
+            </FormItem>
+            <FormItem  required label="导航配置">
+              <JSONInput
+                  locale      = { locale }
+                  placeholder = {this.projectMenu}
+                  widht       = '500px'
+                  height      = '250px'
+                  onChange    = {this.handleMenuChange}
+              />
+            </FormItem>
+          </Form>
+        </Dialog>
+      );
+    }
     return (
       <Dialog
         className="fullscreen-dialog"

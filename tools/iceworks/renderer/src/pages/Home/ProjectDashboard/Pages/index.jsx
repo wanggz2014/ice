@@ -159,7 +159,7 @@ class PagesCard extends Component {
       projectPath: this.props.projects.currentProject.fullPath,
       pageName: name,
     });
-  }
+  };
 
   renderPageList = () => {
     const { pages } = this.state;
@@ -174,6 +174,7 @@ class PagesCard extends Component {
       if (page.name === 'IceworksPreviewPage') {
         return null;
       }
+
       return (
         <div className="page-item" key={page.name} data-path={page.fullPath}>
           {
@@ -190,7 +191,7 @@ class PagesCard extends Component {
             <ExtraButton
               style={{ color: '#3080FE' }}
               placement={'top'}
-              tipText="添加区块"
+              tipText="修改页面"
               onClick={this.handlePageAddBlock.bind(
                 this,
                 page.fullPath,
